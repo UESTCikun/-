@@ -1,0 +1,116 @@
+// ==UserScript==
+// @name         计网mooc互评
+// @namespace    IKUN
+// @version      3.0
+// @description  用法：导入油猴。需进入作业互评页面(最里面)，点击对应按钮执行相应操作。
+// @match        https://www.icourse163.org/spoc/learn/*
+// @grant        none
+// @author       制止不了就放任
+// @license      Anti 996 License v1.0 or later
+
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // 创建“给他1次”按钮
+    const buttonOnce = createActionButton('给他1次', 300);
+    buttonOnce.addEventListener('click', function() {
+        singleRun();
+    });
+
+    // 创建“给他5次”按钮
+    const buttonFiveTimes = createActionButton('给他5次(亿点点时延)', 250);
+    buttonFiveTimes.addEventListener('click', function() {
+        multiRun(5);
+    });
+
+    function createActionButton(text, topPosition) {
+        const button = document.createElement('button');
+        button.innerText = text;
+        button.style.position = 'fixed';
+        button.style.top = `${topPosition}px`;
+        button.style.right = '50px';
+        button.style.backgroundColor = '#FEFEFE';
+        button.style.boxShadow = '0 4px 20px rgba(0,0,0,.3)';
+        button.style.fontWeight = '600';
+        button.style.fontSize = "1.2em";
+        button.style.padding = '0.75em 1em';
+        button.style.color = '#80AAD3';
+        button.style.border = '0.15em solid #80AAD3';
+        button.style.borderRadius = '2em';
+        button.style.cursor = 'pointer';
+        button.style.transition = '0.4s';
+
+        button.addEventListener('mouseover', function() {
+            button.style.backgroundColor = '#80AAD3';
+            button.style.color = '#FEFEFE';
+            button.style.border = '0.15em solid #FEFEFE';
+        });
+
+        button.addEventListener('mouseout', function() {
+            button.style.backgroundColor = '#FEFEFE';
+            button.style.color = '#80AAD3';
+            button.style.border = '0.15em solid #80AAD3';
+        });
+
+        document.body.appendChild(button);
+        return button;
+    }
+
+    function singleRun() {
+        performBusinessLogic();
+        scrollToBottom();
+    }
+
+    function multiRun(times) {
+        setTimeout(function() {
+            for (let i = 0; i < times; i++) {
+                setTimeout(function() {
+                    performBusinessLogic();
+                    clickElement('.j-submitbtn');
+                    setTimeout(function() {
+                        clickElement('.j-gotonext');
+                    }, 2000);
+                    if (i < times - 1) {
+                        // 可以在这里增加额外的延时
+                    }
+                }, (i + 1) * 3000); // 总延时包括逻辑执行、点击提交和继续评估的时间
+            }
+        }, 1000);
+    }
+
+    function performBusinessLogic() {
+        var textareas = document.querySelectorAll('.inputtxt');
+        textareas.forEach(function(textarea) {
+            textarea.value = '但这里是慕课你还得练';
+        });
+
+        var scoreContainers = document.querySelectorAll('.detail');
+        scoreContainers.forEach(function(container) {
+            var radioButtons = container.querySelectorAll('input[type="radio"].j-select');
+            let maxValue = -1;
+            let maxRadioButton;
+
+            radioButtons.forEach(function(button) {
+                let currentValue = parseInt(button.value, 10);
+                if (currentValue > maxValue) {
+                    maxValue = currentValue;
+                    maxRadioButton = button;
+                }
+            });
+
+            if (maxRadioButton) {
+                maxRadioButton.checked = true;
+            }
+        });
+    }
+
+    function clickElement(selector) {
+        document.querySelector(selector).click();
+    }
+
+    function scrollToBottom() {
+        window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+    }
+})();
